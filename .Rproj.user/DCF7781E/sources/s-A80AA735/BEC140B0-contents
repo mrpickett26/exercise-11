@@ -34,12 +34,9 @@ summary(m2_1)
 library(dplyr)
 d<- na.omit(d)
 Migration<-as.factor(d$Migration)
-
-
 m3_1<- lm(log(d$Mass)~ Migration + relevel(Migration, ref = "1")) 
 summary(m3_1)
-
-## The relevel is not working properly because the outputs are not changing at all and I don't know how to make it change..
+## cannot get the relevel to work... sorry
 
 d <- d %>%
     mutate(Migration = case_when(Migration == "3" ~ "3", Migration == "2" ~ "2", Migration =="1" ~ "1"))
@@ -76,18 +73,18 @@ permut_F
 library(tidyverse)
 f<-"https://raw.githubusercontent.com/difiore/ada-2022-datasets/main/AVONETdataset1.csv"
 library(dplyr)
-d<-read_csv(f ,col_names = TRUE)
+d<-read_csv(f  ,col_names = TRUE)
 
-#d<- na.omit(d)
+d<- na.omit(d)
+Migration<- as.factor(d$Migration)
 
-d<- d%>% select(Species1, Trophic.Level, Family1, Order1, Beak.Width, Beak.Depth, Tarsus.Length, Wing.Length, Migration, Habitat, Mass, Tail.Length, Trophic.Niche, Min.Latitude, Max.Latitude, Centroid.Latitude, Range.Size, Beak.Length_Culmen, Primary.Lifestyle)
+d<-d%>%
+  select(Species1, Trophic.Level, Family1, Order1, Beak.Width, Beak.Depth, Tarsus.Length, Wing.Length, Migration, Habitat, Mass, Tail.Length, Trophic.Niche, Min.Latitude, Max.Latitude, Centroid.Latitude, Range.Size, Beak.Length_Culmen, Primary.Lifestyle)
 d
-
 d <- d %>%
-  mutate(logMass=log(Mass),
-log_TL=log(Tarsus.Length),
-  log_BL_cumen=log(Beak.Length_Culmen),
-  Migration=as.factor(Migration))
+  mutate(logMass=log(Mass))%>%
+  mutate(log_TL=log(Tarsus.Length))%>%
+  mutate(log_BL_cumen=log(Beak.Length_Culmen))
 d
 
 lm_relative_beak_length<- lm(d$log_BL_cumen~d$Mass)
@@ -96,7 +93,6 @@ resid_BL_mass<- resid(lm_relative_beak_length)
 lm_TL_mass<- lm(d$Tarsus.Length~d$Mass)
 resid_TL_mass<- resid(lm_TL_mass)
 
-#Step 2
 library(ggplot2)
 bp_TL_PL<-boxplot(resid_TL_mass~d$Primary.Lifestyle, data=d)
 bp_TL_PL
@@ -108,7 +104,6 @@ log_rs<- log(d$Range.Size)
 hist(log_rs)
 
 ## Definitely need to log transform range size to get normally distributed data
-
 #Step 3
 m.aov <- aov(log_rs ~ d$Migration)
 lm.rs.mig<-lm(log_rs~d$Migration)
@@ -117,16 +112,14 @@ summary(lm.rs.mig)
 plot(m.aov)
 ## The associated p value of the F statistic is very small, and F statistic is very large  which means that at least one group that differs from the other and that the between group variance (dependence on Migration status) is greater than the variance within each migration status
 
+
 log_rs<- as.factor(log_rs)
 
-# m4_1<- lm(log_rs~ Migration + relevel(Migration, ref = "1")) 
-# summary(m4_1)
-## Relevel not working again.... 
-
-aov5<-aov(log(d$Range.Size)~d$Migration)
+aov5<-aov(log(d$Range.Size)~Migration)
 tukey.test <- TukeyHSD(aov5, which = "Migration", conf.level = 0.95)
 tukey.test
-## From this Tukey Test  we can see that the means are not significant 
+plot(tukey.test)
+## From this Tukey Test plot we can see that the means are not significant because all of the CIs cross the vertical line 
 
 
 #Step 4
@@ -155,24 +148,23 @@ aov3_bp
 lm_aov3_var<-lm(resid_BL_mass2 ~ d$Trophic.Level)
 plot_aov3<- plot(lm_aov3_var)
 
-#residual mean BL seems pretty consistent among Primary lifestyles and Trophic levels.
 
 #Step 5
 ##Based on the model output, what would you conclude about how relative beak length is related to these two variables?
 
-m_two_way <- summary(lm(resid_BL_mass2 ~ d$Primary.Lifestyle + d$Trophic.Level))
+m_two_way <- summary(lm(resid_BL_mass2 ~ d$Primary.Lifestyle + d$Migration))
 summary(m_two_way)
 m_two_way
-# Relative beak length is positively correlated to the (Aquatic& Generalist) Primary lifestyle, and the Scavenger tropic level. It is negatively correlated to the others. The p-value for the aquatic  lifestyle, terriestiral lifestyle, omnivore trophic level, and scavenger trophic level are all under 0.05, meaning we reject the null hypothesis and there is a linear relationship between x variable and specified variable.
-
-#Step 6
-m_two_way_inter <- summary(lm(resid_BL_mass2 ~d$Trophic.Level:d$Primary.Lifestyle))
-twoW_inter<-summary(m_two_way_inter)
-twoW_inter
 ## None of the values indicate significance, leading me to conclude that beak length is not related to the outcomes of all the variables . 
 
+#Step 6
+m_two_way_inter <- summary(lm(resid_BL_mass2 ~ d$Primary.Lifestyle + d$Migration+ d$Primary.Lifestyle:d$Migration))
+twoW_inter<-summary(m_two_way_inter)
+twoW_inter
 
 #Step 7
+
+Migration2<-d$Migration
 
 interaction.plot(
   x.factor = d$Trophic.Level,
@@ -181,12 +173,12 @@ interaction.plot(
   trace.label = "Primary Lifestyle",
   # make sure we use {base} version
   fun = mean,
-  response = resid_BL_mass2,
+  response = d$Migration,
   ylab = "Mean Migration"
 )
 
 #Based on the model output, what would you now conclude about how relative beak length is related to these two variables?
-##  Type of plot that displays the fitted values of a response variable on the y-axis and the values of the first factor on the x-axis. Meanwhile, the lines in the plot represent the values of the second factor of interest. If the two lines on the interaction plot are parallel then there is no interaction effect. However, if the lines intersect then there is likely an interaction effect. In this case there is an interaction between insessorials and aerials due to the similarity in their output shape.
+## I could not plot lifestyle vs tropic level... they are both categorical so I am not sure if that would make sense. Type of plot that displays the fitted values of a response variable on the y-axis and the values of the first factor on the x-axis. Meanwhile, the lines in the plot represent the values of the second factor of interest. If the two lines on the interaction plot are parallel then there is no interaction effect. However, if the lines intersect then there is likely an interaction effect. In this case there is an interaction of migrations insessorial and terrestials of herbivores and omnivores.
 
 ```
 
