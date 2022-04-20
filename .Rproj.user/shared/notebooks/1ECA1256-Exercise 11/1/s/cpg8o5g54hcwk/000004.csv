@@ -1,5 +1,0 @@
-"0","d <- d %>%"
-"0","  mutate(logMass=log(Mass))%>%"
-"0","  mutate(log_TL=log(Tarsus.Length))%>%"
-"0","  mutate(log_BL_cumen=log(Beak.Length_Culmen))"
-"0","d"

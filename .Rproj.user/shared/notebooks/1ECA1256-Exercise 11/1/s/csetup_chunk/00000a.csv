@@ -1,6 +1,0 @@
-"0","## Means are significant because none of the CIs cross the vertical line "
-"0","library(reshape2)"
-"0","library(broom)"
-"0","d <- d %>%"
-"0","  mutate(logMass=log(Mass))"
-"0","d"

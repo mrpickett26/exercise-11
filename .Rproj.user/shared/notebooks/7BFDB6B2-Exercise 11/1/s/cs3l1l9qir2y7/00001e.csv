@@ -1,8 +1,0 @@
-"0","permut_F<- mean(permut_F$stat)"
-"0","permut_F"
-"1","[1]"
-"1"," 80.17093"
-"1","
-"
-"0","# i tried to do the type=permute, but it kicked back an error saying that it was expecting bootstrap so I did that and took the mean... "
-"0",""

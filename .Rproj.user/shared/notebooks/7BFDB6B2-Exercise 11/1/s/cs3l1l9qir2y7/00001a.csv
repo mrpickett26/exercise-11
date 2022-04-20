@@ -1,5 +1,0 @@
-"0","original.F<- aov(logMass~Trophic.Level, data=d)%>%"
-"0","  tidy()%>%"
-"0","  filter(term == ""Trophic.Level"") %>%"
-"0","  mutate(term = if_else(term==""Trophic.Level"",""TL"",term))"
-"0","original.F"
